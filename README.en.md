@@ -46,6 +46,66 @@ Local example:
 ./scripts/build-release.sh v1.14.3 ./dist
 ```
 
+## Service Scripts
+
+This repository includes two service templates:
+
+- Linux launcher script: `deploy/linux/coredns.sh`
+- Linux systemd unit: `deploy/linux/coredns.service`
+- Linux environment example: `deploy/linux/coredns.env.example`
+- Linux US Corefile template: `deploy/linux/Corefile.us`
+- Linux CN Corefile template: `deploy/linux/Corefile.cn`
+- OpenWrt init script: `deploy/openwrt/coredns.init`
+- OpenWrt UCI config example: `deploy/openwrt/coredns.config`
+- OpenWrt CN Corefile template: `deploy/openwrt/Corefile.cn`
+
+### Linux systemd
+
+Recommended paths:
+
+- Binary: `/usr/local/bin/coredns`
+- Corefile: `/etc/coredns/Corefile`
+- Working directory: `/var/lib/coredns`
+- Launcher script: `/usr/local/libexec/coredns.sh`
+- Environment file: `/etc/default/coredns`
+
+Installation example:
+
+```bash
+sudo useradd --system --home /var/lib/coredns --shell /usr/sbin/nologin coredns
+sudo mkdir -p /etc/coredns /var/lib/coredns
+sudo install -m 0755 coredns /usr/local/bin/coredns
+sudo install -m 0644 deploy/linux/Corefile.us /etc/coredns/Corefile
+# or
+# sudo install -m 0644 deploy/linux/Corefile.cn /etc/coredns/Corefile
+sudo install -m 0755 deploy/linux/coredns.sh /usr/local/libexec/coredns.sh
+sudo install -m 0644 deploy/linux/coredns.service /etc/systemd/system/coredns.service
+sudo install -m 0644 deploy/linux/coredns.env.example /etc/default/coredns
+sudo systemctl daemon-reload
+sudo systemctl enable --now coredns
+```
+
+### OpenWrt
+
+Recommended paths:
+
+- Binary: `/usr/bin/coredns`
+- Corefile: `/etc/coredns/Corefile`
+- Init script: `/etc/init.d/coredns`
+- UCI config: `/etc/config/coredns`
+
+Installation example:
+
+```sh
+mkdir -p /etc/coredns /var/lib/coredns
+install -m 0755 coredns /usr/bin/coredns
+install -m 0644 deploy/openwrt/Corefile.cn /etc/coredns/Corefile
+install -m 0755 deploy/openwrt/coredns.init /etc/init.d/coredns
+install -m 0644 deploy/openwrt/coredns.config /etc/config/coredns
+/etc/init.d/coredns enable
+/etc/init.d/coredns start
+```
+
 ## US Corefile Example
 
 ```corefile
@@ -90,7 +150,7 @@ Local example:
         block_type 0.0.0.0
         refresh 12h
         cache_dir /opt/coredns/hostlist
-        # bypass_ip 104.156.140.185
+        # bypass_ip 192.168.0.155
         safesearch off
         parental off
     }

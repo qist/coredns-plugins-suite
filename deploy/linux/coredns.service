@@ -1,0 +1,23 @@
+[Unit]
+Description=CoreDNS with hostlist, speedcheck and resolve plugins
+Documentation=https://github.com/qist/coredns-plugins-suite
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=coredns
+Group=coredns
+EnvironmentFile=-/etc/default/coredns
+WorkingDirectory=/var/lib/coredns
+ExecStart=/usr/local/libexec/coredns.sh
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=2s
+LimitNOFILE=1048576
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

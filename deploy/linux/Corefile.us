@@ -1,0 +1,99 @@
+.:53 {
+    forward . 127.0.0.1:5302 127.0.0.1:5303 127.0.0.1:5301 {
+        max_fails 2
+        policy sequential
+        health_check 5s
+        max_concurrent 1000
+    }
+    hostlist {
+        # Blacklist sources
+        url https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt
+        url https://adguardteam.github.io/HostlistsRegistry/assets/filter_2.txt
+        url https://adguardteam.github.io/HostlistsRegistry/assets/filter_29.txt
+        url https://adguardteam.github.io/HostlistsRegistry/assets/filter_21.txt
+        url https://adguardteam.github.io/HostlistsRegistry/assets/filter_44.txt
+        url https://adguardteam.github.io/HostlistsRegistry/assets/filter_11.txt
+        url https://adguardteam.github.io/HostlistsRegistry/assets/filter_38.txt
+        url https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/reject.txt
+
+        # User allowlist rules
+        allowlist @@||www.youtube.com^
+        allowlist @@||m.youtube.com^
+        allowlist @@||cntv.lat^
+        allowlist @@||top^
+        allowlist @@||angtv.cc^
+        allowlist @@||cf^
+        allowlist @@||m.stripe.com^
+        allowlist @@||cqitv.cloudns.ch^
+        allowlist @@||z-lib.io^
+        allowlist @@||dpdns.org^
+        allowlist @@||savetwitter.net^
+        allowlist @@||wyfc.qzz.io^
+        allowlist @@||polymarket.com^
+        allowlist @@||epg.cdn.loc.cc^
+        allowlist @@||a.nel.cloudflare.com^
+        allowlist @@||d.skk.moe^
+
+        mode blacklist
+        block_type 0.0.0.0
+        refresh 12h
+        cache_dir /opt/coredns/hostlist
+        # bypass_ip 192.168.0.155
+        safesearch off
+        parental off
+    }
+    speedcheck {
+        speed-check-mode ping,tcp:443,tcp:80
+        speed-timeout-mode 1s
+        speed-check-parallel on
+        speed-cache-ttl 60s
+        speed-ip-mode ipv6,ipv4
+        speed-ip-parallel on
+        speed-host-override mtalk.google.com|tcp:5228|ipv6,ipv4
+        speed-host-override www.gstatic.com|tcp:80,tcp:443|ipv4
+        speed-host-override *.bing.com|tcp:80,tcp:443|ipv4
+        speed-host-override bing.com|tcp:80,tcp:443|ipv4
+        check_http_send "HEAD / HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
+        check_http_expect_alive http_2xx http_3xx http_4xx
+    }
+    reload 6s
+    loadbalance
+}
+
+.:5301 {
+    forward . tls://1.0.0.1 tls://1.1.1.1 tls://[2606:4700:4700::1001] tls://[2606:4700:4700::1111] {
+        tls_servername one.one.one.one
+        max_fails 2
+        policy round_robin
+        health_check 5s
+    }
+}
+
+.:5302 {
+    forward . tls://8.8.8.8 tls://8.8.4.4 tls://[2001:4860:4860::8844] tls://[2001:4860:4860::8888] {
+        tls_servername dns.google
+        max_fails 2
+        policy round_robin
+        health_check 5s
+    }
+}
+
+.:5303 {
+    forward . tls://9.9.9.9 tls://149.112.112.112 tls://[2620:fe::9] tls://[2620:fe::fe] {
+        tls_servername dns.quad9.net
+        max_fails 2
+        policy round_robin
+        health_check 5s
+    }
+}
+
+https://.:8443 {
+    tls /apps/nginx/sslkey/tycng.com/ecc/fullchain.crt /apps/nginx/sslkey/tycng.com/ecc/private.key
+    edns0 on
+    resolve
+    forward . 127.0.0.1:53 {
+        max_concurrent 1000
+    }
+    reload 6s
+    loadbalance
+}

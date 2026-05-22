@@ -1,0 +1,61 @@
+#!/bin/sh /etc/rc.common
+
+START=95
+STOP=10
+USE_PROCD=1
+PROG=/usr/bin/coredns
+CONFIG_FILE=/etc/config/coredns
+
+append_arg() {
+	local value="$1"
+	[ -n "$value" ] && procd_append_param command "$value"
+}
+
+start_service() {
+	local enabled binary corefile user group workdir
+	local stdout stderr respawn pidfile
+
+	config_load coredns
+	config_get_bool enabled main enabled 1
+	[ "$enabled" -eq 1 ] || return 0
+
+	config_get binary main binary "$PROG"
+	config_get corefile main corefile /etc/coredns/Corefile
+	config_get user main user root
+	config_get group main group root
+	config_get workdir main workdir /var/lib/coredns
+	config_get_bool stdout main stdout 1
+	config_get_bool stderr main stderr 1
+	config_get_bool respawn main respawn 1
+	config_get pidfile main pidfile /var/run/coredns.pid
+
+	[ -x "$binary" ] || {
+		echo "coredns binary not executable: $binary" >&2
+		return 1
+	}
+
+	[ -f "$corefile" ] || {
+		echo "Corefile not found: $corefile" >&2
+		return 1
+	}
+
+	mkdir -p "$workdir"
+
+	procd_open_instance
+	procd_set_param command "$binary"
+	procd_append_param command -conf "$corefile"
+	config_list_foreach main extra_arg append_arg
+	procd_set_param pidfile "$pidfile"
+	procd_set_param user "$user"
+	procd_set_param group "$group"
+	[ "$stdout" -eq 1 ] && procd_set_param stdout 1
+	[ "$stderr" -eq 1 ] && procd_set_param stderr 1
+	[ "$respawn" -eq 1 ] && procd_set_param respawn
+	procd_set_param limits nofile="1048576 1048576"
+	procd_set_param env HOME="$workdir"
+	procd_close_instance
+}
+
+service_triggers() {
+	procd_add_reload_trigger "coredns"
+}

@@ -1,0 +1,45 @@
+.:53 {
+    forward . 127.0.0.1:5301 127.0.0.1:5302 {
+        max_fails 2
+        health_check 5s
+        max_concurrent 1000
+    }
+    rewrite name cloudflare cloudflare
+    hosts {
+        190.93.245.123 cloudflare
+        reload 30s
+        fallthrough
+    }
+    speedcheck {
+        speed-check-mode ping,tcp:443,tcp:80
+        speed-timeout-mode 1s
+        speed-check-parallel on
+        speed-cache-ttl 60s
+        speed-ip-mode ipv6,ipv4
+        speed-ip-parallel on
+        speed-host-override www.qq.com,tcp:443,ipv4
+        check_http_send "HEAD / HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"
+        check_http_expect_alive http_2xx http_3xx http_4xx
+    }
+    reload 6s
+    cache 10
+    loadbalance
+}
+
+.:5301 {
+    forward . tls://120.53.53.53 tls://1.12.12.12 {
+        tls_servername dot.pub
+        max_fails 2
+        policy sequential
+        health_check 5s
+    }
+}
+
+.:5302 {
+    forward . tls://223.5.5.5 tls://223.6.6.6 {
+        tls_servername dns.alidns.com
+        max_fails 2
+        policy sequential
+        health_check 5s
+    }
+}
