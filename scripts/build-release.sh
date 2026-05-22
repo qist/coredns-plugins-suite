@@ -60,6 +60,9 @@ ensure_line_after "plugin.cfg" "cache:cache" "speedcheck:speedcheck"
 log "plugin order summary"
 grep -nE 'edns0:resolve|resolve:resolve|hostlist:hostlist|speedcheck:speedcheck' plugin.cfg
 
+log "running go generate coredns.go"
+go generate coredns.go
+
 log "building release assets with CoreDNS Makefile.release"
 make -f Makefile.release release
 
