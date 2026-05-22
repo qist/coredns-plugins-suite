@@ -1,6 +1,6 @@
 # coredns-plugins-suite
 
-[English](file:///opt/coredns-plugins-suite/README.en.md)
+[English](./README.en.md)
 
 ## 简介
 
